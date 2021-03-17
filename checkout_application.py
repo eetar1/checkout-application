@@ -17,8 +17,9 @@ def loadPriceRules(rulesFile):
                     exit(1)
 
                 # Try to parse single price
+                # Only allow 2 decimals as this is currency
                 try:
-                    price = float(cmd)
+                    price = int(float(cmd) * 100) / 100.0
                 except ValueError:
                     price = -1
 
@@ -89,10 +90,8 @@ def computeLowestPrice(item, rule):
         print('Item ' + item[0] + ' is missing a price')
         exit(1)
 
-
-
     # Only one rule per product so all the rules have equal priority
-    if 'XFY' in rule.keys() :
+    if 'XFY' in rule.keys():
         xfyBetter = rule.get('XFY').get('PRICE') / rule.get('XFY').get('ITEMS') <= price
         while numItems >= rule.get('XFY').get('ITEMS') and xfyBetter:
             cost += rule.get('XFY').get('PRICE')
@@ -128,7 +127,7 @@ def buildRecipt(items, rules):
     return receipt
 
 
-def displayRecipt(output):
+def displayReceipt(output):
     for line in output:
         print(line)
 
@@ -155,7 +154,7 @@ def main(argv):
         rulesDict = loadPriceRules(argv[0])
         cartItems = loadShoppingCart(argv[1])
         receipt = buildRecipt(cartItems, rulesDict)
-        displayRecipt(receipt)
+        displayReceipt(receipt)
         endProgram = checkEndProgram()
 
     print('Program Exiting')
