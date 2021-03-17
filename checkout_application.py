@@ -11,10 +11,15 @@ def loadPriceRules(rulesFile):
                 item = lineSplit[1]
                 cmd = lineSplit[0]
 
+                # Check item is valid
+                if len(item.strip()) < 1:
+                    print("Item names must be defined. Invalid item " + line)
+                    exit(1)
+
                 # Try to parse single price
                 try:
                     price = float(cmd)
-                except:
+                except ValueError:
                     price = -1
 
                 # Try to parse XFY
@@ -25,7 +30,7 @@ def loadPriceRules(rulesFile):
                         xfy[1] = float(xfy[1])
                     else:
                         xfy[0] = -1
-                except:
+                except (ValueError, IndexError):
                     xfy[0] = -1
 
                 # If the item exists in the rules dictionary return its entry other wise return a empty dictionary
@@ -48,7 +53,7 @@ def loadPriceRules(rulesFile):
                 # Add new rule to rules dict
                 rulesDict.update({item.upper(): itemDict})
         return rulesDict
-    except:
+    except OSError:
         print('Could not open price rules file exiting')
         exit(1)
 
@@ -68,7 +73,7 @@ def loadShoppingCart(cartFile):
                 else:
                     cartDict[cleanLine] = 1
         return cartDict
-    except:
+    except OSError:
         print('Could not open cart file exiting')
         exit(1)
 
@@ -84,9 +89,12 @@ def computeLowestPrice(item, rule):
         print('Item ' + item[0] + ' is missing a price')
         exit(1)
 
+
+
     # Only one rule per product so all the rules have equal priority
-    if 'XFY' in rule.keys():
-        while numItems >= rule.get('XFY').get('ITEMS'):
+    if 'XFY' in rule.keys() :
+        xfyBetter = rule.get('XFY').get('PRICE') / rule.get('XFY').get('ITEMS') <= price
+        while numItems >= rule.get('XFY').get('ITEMS') and xfyBetter:
             cost += rule.get('XFY').get('PRICE')
             numItems -= rule.get('XFY').get('ITEMS')
     elif 'BOGO' in rule.keys() and numItems > 0:
@@ -94,7 +102,7 @@ def computeLowestPrice(item, rule):
             cost += price
             numItems = numItems - 2 if numItems >= 2 else 0
     elif 'BO50' in rule.keys() and numItems > 0:
-        while numItems > 0:
+        while numItems > 1:
             cost += price * 1.5
             numItems = numItems - 2 if numItems >= 2 else 0
     cost += price * numItems
@@ -127,7 +135,7 @@ def displayRecipt(output):
 
 def checkEndProgram():
     while True:
-        resp = input('Would you like to enter another transaction? Y/N')
+        resp = input('Would you like to enter another transaction? Y/N ')
         if resp.upper() == 'Y':
             return False
         elif resp.upper() == 'N':
