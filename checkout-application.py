@@ -7,7 +7,6 @@ def loadPriceRules():
             cmd = lineSplit[0]
 
             # Try to parse single price
-            price = -1
             try:
                 price = float(cmd)
             except:
@@ -30,14 +29,14 @@ def loadPriceRules():
                 itemDict.update({'BOGO': True})
             elif cmd.upper() == 'BO50':
                 itemDict.update({'BO50': True})
-            elif price > 0:
+            elif price > 0.01:
                 itemDict.update({'PRICE': price})
             elif len(xfy) == 2 and xfy[0] > 0 and xfy[1] > 0:
                 itemDict.update({'XFY': {'ITEMS': xfy[0], 'PRICE': xfy[1]}})
             else:
                 print(
-                    "Invalid commands detected please check the price-lists.txt and ensure all command are the proper "
-                    "format")
+                    "Invalid commands detected. Please check the price-lists.txt and ensure all command are the proper "
+                    "format. The invalid rule is " + line.strip())
                 exit(1)
             rulesDict.update({item.upper(): itemDict})
     return rulesDict
@@ -47,6 +46,7 @@ def loadShoppingCart():
     cartDict = {}
     with open('shopping-cart.txt', 'r') as fp:
         for line in fp:
+            # Remove the new line
             cleanLine = line.strip().upper()
 
             # Item has already been seen increase the count
@@ -58,12 +58,59 @@ def loadShoppingCart():
     return cartDict
 
 
-def buildRecipt():
-    pass
+# Assuming that the user should always get the lowest possible price
+def computeLowestPrice(item, rule):
+    cost = 0.0
+    numItems = item[1]
+    price = rule.get('PRICE') if rule is not None else None
+    if price is None:
+        print('Item ' + item[0] + ' is missing a price')
+        exit(1)
+
+    if 'XFY' in rule.keys():
+        # Price per unit of all the deals
+        xfyPPU = rule.get('XFY').get('PRICE') / rule.get('XFY').get('ITEMS')
+        bogoPPU = price / 2
+
+        # The xfy provides a lower price than the BOGO so if possible it should be used first
+        if xfyPPU < bogoPPU:
+            while numItems >= rule.get('XFY').get('ITEMS'):
+                cost += rule.get('XFY').get('PRICE')
+                numItems -= rule.get('XFY').get('ITEMS')
+    if 'BOGO' in rule.keys() and numItems > 0:
+        while numItems > 0:
+            cost += price
+            numItems = numItems - 2 if numItems >= 2 else 0
+    elif 'BO50' in rule.keys() and numItems > 0:
+        while numItems > 0:
+            cost += price * 1.5
+            numItems = numItems - 2 if numItems >= 2 else 0
+    cost += price * numItems
+    return cost
 
 
-def displayRecipt():
-    pass
+def buildRecipt(items, rules):
+    receipt = []
+    totalPrice = 0.0
+
+    for item in items.items():
+        lowestPrice = computeLowestPrice(item, rules.get(item[0]))
+        lineItem = str(item[0]) + ' x' + str(item[1]) + ' ${:.2f}'.format(lowestPrice)
+        totalPrice += lowestPrice
+        receipt.append(lineItem)
+
+    # Add total
+    finalLine = 'Total ${:.2f}'.format(totalPrice)
+    receipt.append(finalLine)
+
+    #  Empty line for formatting
+    receipt.append('')
+    return receipt
+
+
+def displayRecipt(output):
+    for line in output:
+        print(line)
 
 
 def checkEndProgram():
@@ -80,10 +127,10 @@ def checkEndProgram():
 def main():
     endProgram = False
     while not endProgram:
-        loadPriceRules()
-        loadShoppingCart()
-        buildRecipt()
-        displayRecipt()
+        rulesDict = loadPriceRules()
+        cartItems = loadShoppingCart()
+        recipt = buildRecipt(cartItems, rulesDict)
+        displayRecipt(recipt)
         endProgram = checkEndProgram()
 
     print('Program Ending')
