@@ -1,5 +1,46 @@
 def loadPriceRules():
-    pass
+    rulesDict = {}
+    with open('price-list.txt', 'r') as fp:
+        for line in fp:
+            lineSplit = line.strip().split(',')
+            item = lineSplit[1]
+            cmd = lineSplit[0]
+
+            # Try to parse single price
+            price = -1
+            try:
+                price = float(cmd)
+            except:
+                price = -1
+
+            # Try to parse XFY
+            xfy = cmd.upper().split("F")
+            try:
+                if len(xfy) > 1:
+                    xfy[0] = float(xfy[0])
+                    xfy[1] = float(xfy[1])
+                else:
+                    xfy[0] = -1
+            except:
+                xfy[0] = -1
+
+            itemDict = rulesDict.get(item.upper()) if item.upper() in rulesDict.keys() else {}
+
+            if cmd.upper() == 'BOGO':
+                itemDict.update({'BOGO': True})
+            elif cmd.upper() == 'BO50':
+                itemDict.update({'BO50': True})
+            elif price > 0:
+                itemDict.update({'PRICE': price})
+            elif len(xfy) == 2 and xfy[0] > 0 and xfy[1] > 0:
+                itemDict.update({'XFY': {'ITEMS': xfy[0], 'PRICE': xfy[1]}})
+            else:
+                print(
+                    "Invalid commands detected please check the price-lists.txt and ensure all command are the proper "
+                    "format")
+                exit(1)
+            rulesDict.update({item.upper(): itemDict})
+    return rulesDict
 
 
 def loadShoppingCart():

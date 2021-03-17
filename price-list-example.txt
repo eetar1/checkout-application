@@ -1,0 +1,4 @@
+BOGO,ITEM Buy one get one
+BO50,ITEM Buy one get one 50% off
+.75,ITEM Normal price for item
+XFY,ITEM where x is the quantity and Y is the price. Eg. 10F6 APPLE = Ten apples for $6

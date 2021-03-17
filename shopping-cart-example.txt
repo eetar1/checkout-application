@@ -1,0 +1,6 @@
+APPLE
+ORANGE
+JUICE
+.
+.
+.
