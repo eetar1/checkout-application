@@ -9,7 +9,8 @@ will apply the latest rules and cart.
 ## Input format
 
 The input for the shopping cart and the price rules should be placed in their own file and 
-encoded in a standard string format a .txt file is recommended. See the ```*-example``` files for a visual example. 
+encoded in a standard string format a .txt file is recommended. See the ```*-example``` files for a visual example.
+The names of items and commands are case-insensitive.  
 
 ### Cart
 
